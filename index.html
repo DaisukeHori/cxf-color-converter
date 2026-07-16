@@ -3,9 +3,42 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CxF Color Converter — 分光測定データを Lab / XYZ / sRGB / CMYK へ</title>
-<meta name="description" content="CxF3 (ISO 17972) ファイルをブラウザだけで Lab・XYZ・sRGB・CMYK に変換。ICCプロファイル対応、ファイルはどこにも送信されません。">
+<title>CxF変換ツール — 測色データをLab・RGB・CMYKへ無料変換 | CxF Color Converter</title>
+<meta name="description" content="X-Rite i1Proなどの測色計が書き出すCxF3ファイルをドロップするだけで、Lab・XYZ・sRGB・CMYK値と色見本を即表示する無料Webツール。Japan Color等のICCプロファイル対応。登録不要、測定データはブラウザ内で処理され送信されません。">
 <meta name="theme-color" content="#131418">
+<link rel="canonical" href="https://daisukehori.github.io/cxf-color-converter/">
+<link rel="icon" href="favicon.ico" sizes="32x32">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="CxF Color Converter">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:url" content="https://daisukehori.github.io/cxf-color-converter/">
+<meta property="og:title" content="CxF変換ツール — 測色データをLab・RGB・CMYKへ無料変換">
+<meta property="og:description" content="測色計のCxF3ファイルをドロップするだけで、色見本とLab・sRGB・CMYK値を即表示。ICCプロファイル対応・登録不要・データは送信されません。">
+<meta property="og:image" content="https://daisukehori.github.io/cxf-color-converter/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="CxF変換ツール — 測色データをLab・RGB・CMYKへ無料変換">
+<meta name="twitter:description" content="測色計のCxF3ファイルをドロップするだけで、色見本とLab・sRGB・CMYK値を即表示。ICC対応・登録不要。">
+<meta name="twitter:image" content="https://daisukehori.github.io/cxf-color-converter/assets/og-image.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "CxF Color Converter",
+  "alternateName": "CxF変換ツール",
+  "url": "https://daisukehori.github.io/cxf-color-converter/",
+  "description": "CxF3 (ISO 17972) の測色データをブラウザだけでLab・XYZ・sRGB・CMYKへ変換する無料Webアプリ。ICCプロファイル対応。",
+  "applicationCategory": "DesignApplication",
+  "operatingSystem": "Web",
+  "inLanguage": "ja",
+  "isAccessibleForFree": true,
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" },
+  "author": { "@type": "Person", "name": "Daisuke Hori", "url": "https://github.com/DaisukeHori" }
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -46,7 +79,7 @@
       <div class="drop" id="dropIcc">
         <h2>CMYK ICC プロファイル<span class="opt">（任意）</span><button class="q" type="button" data-term="icc" aria-label="ICCプロファイルとは" aria-expanded="false">?</button></h2>
         <p>Japan Color 2001/2011 Coated 等</p>
-        <div class="hint">.icc .icm — 未指定時は簡易CMYK（参考値）</div>
+        <div class="hint">.icc .icm — 一度読み込むとこの端末に保存され、次回から自動適用（送信されません）</div>
         <div class="status" id="iccStatus"><span class="badge naive">簡易CMYK<button class="q" type="button" data-term="cmyk" aria-label="CMYKとは" aria-expanded="false" style="margin-left:6px;border-color:currentColor;color:inherit">?</button></span></div>
         <input type="file" id="fileIcc" accept=".icc,.icm">
       </div>

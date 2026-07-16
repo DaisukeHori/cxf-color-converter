@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://daisukehori.github.io/cxf-color-converter/sitemap.xml

@@ -3,9 +3,109 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>使い方・FAQ — CxF Color Converter</title>
-<meta name="description" content="CxF Color Converter の使い方、CxFファイルの書き出し方法、ICCプロファイルの設定、よくある質問と用語集。">
+<title>使い方・FAQ — CxFファイルの書き出し方と10の質問 | CxF Color Converter</title>
+<meta name="description" content="CxF Color Converterの使い方を3ステップで解説。i1ProfilerからのCxF書き出し方法、Japan Color ICCプロファイルの入手と設定、よくある質問10件、色の専門用語ミニ辞典。">
 <meta name="theme-color" content="#131418">
+<link rel="canonical" href="https://daisukehori.github.io/cxf-color-converter/guide.html">
+<link rel="icon" href="favicon.ico" sizes="32x32">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="CxF Color Converter">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:url" content="https://daisukehori.github.io/cxf-color-converter/guide.html">
+<meta property="og:title" content="使い方・FAQ — CxFファイルの書き出し方と10の質問">
+<meta property="og:description" content="CxFの書き出し方法、Japan Color ICCの入手と設定、よくある質問10件、色の専門用語ミニ辞典。">
+<meta property="og:image" content="https://daisukehori.github.io/cxf-color-converter/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "FAQPage",
+ "mainEntity": [
+  {
+   "@type": "Question",
+   "name": "CxFファイルとは何ですか？ どうやって用意しますか？",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "測色データをやり取りする国際標準ファイル（ISO 17972）です。X-Riteのi1Pro・eXactなどの分光測色計と付属ソフトで色を測定し、CxF3形式で保存すると作れます。"
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "ファイルが読み込めません。対応している形式は？",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "対応しているのはCxFバージョン3（CxF3）です。拡張子は.cxf/.cmxf/.mxf/.xmlに対応。古いCxF1・CxF2は非対応のため、お使いのソフトでCxF3として書き出し直してください。"
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "測定データは外部に送信されますか？",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "いいえ。ファイルの解析も色計算もすべてブラウザの中だけで行われ、サーバーには一切送信されません。社外秘のブランドカラーでも安心して使えます。"
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "M0 / M1 / M2 のどれを見ればいいですか？",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "印刷物の評価・入稿基準にはM1（蛍光増白剤の効果を含む業界標準）、過去の測定データとの比較にはM0、増白剤の影響を除いた素の色を見たいときはM2が使われます。"
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "画面に表示される色は、実物と同じ色ですか？",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "「できるだけ近い色」です。表示はモニタの性能とキャリブレーション状態に依存します。色指定や検査にはL*a*b*などの数値を使ってください。"
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "CMYK値がPhotoshopでの変換結果と少し違います。なぜですか？",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "CMYK変換はプロファイル・インテント・BPCの設定で結果が変わります。同じICCプロファイルをドロップし「相対比色＋BPC ON」（Photoshopの初期設定）に合わせれば実用上一致します。"
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Japan ColorのICCプロファイルはどこで入手できますか？",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Japan Color 2011はJapan Color認証制度の公式サイト（japancolor.jp）からライセンス契約に同意のうえ無償でダウンロードできます。Adobe製品にはJapan Color 2001 Coatedが付属しています。"
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "PantoneやDICの色番号に変換できますか？",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "現在は対応していません（色ライブラリは各社の権利物のため）。本ツールで得たL*a*b*値をIllustratorや各社ツールの色検索に入力する方法をおすすめします。"
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "測色器メーカー純正ソフトの表示値と、小数点以下がわずかに違います",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "計算に使う波長間隔や白色点の定義の差によるもので、多くの場合ΔE2000で0.1以下 — 人の目では区別できない正常な範囲です。"
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "スマホやタブレットでも使えますか？",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "使えます。クラウドストレージやメール添付からCxFファイルを端末に保存し、ファイル選択から読み込めます。色の見た目の確認はキャリブレーションされたPCモニタをおすすめします。"
+   }
+  }
+ ]
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">

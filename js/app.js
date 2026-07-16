@@ -255,24 +255,106 @@
     });
   }
 
-  // ===== ICCファイル処理 =====
+  // ===== ICCの端末内保存 (IndexedDB) =====
+  // Japan Color等のICCプロファイルはライセンス上サイトに同梱・配布できないため、
+  // 一度読み込んだプロファイルを利用者自身の端末(ブラウザ)に保存し、
+  // 次回アクセス時に自動適用する。データはサーバーに送信されない。
+  var IDB_NAME = 'cxf-color-converter', IDB_STORE = 'icc';
+  function idbOpen() {
+    return new Promise(function (res, rej) {
+      var rq = indexedDB.open(IDB_NAME, 1);
+      rq.onupgradeneeded = function () { rq.result.createObjectStore(IDB_STORE); };
+      rq.onsuccess = function () { res(rq.result); };
+      rq.onerror = function () { rej(rq.error); };
+    });
+  }
+  function idbSet(key, val) {
+    return idbOpen().then(function (db) {
+      return new Promise(function (res, rej) {
+        var tx = db.transaction(IDB_STORE, 'readwrite');
+        tx.objectStore(IDB_STORE).put(val, key);
+        tx.oncomplete = function () { res(); };
+        tx.onerror = function () { rej(tx.error); };
+      });
+    });
+  }
+  function idbGet(key) {
+    return idbOpen().then(function (db) {
+      return new Promise(function (res, rej) {
+        var rq = db.transaction(IDB_STORE).objectStore(IDB_STORE).get(key);
+        rq.onsuccess = function () { res(rq.result); };
+        rq.onerror = function () { rej(rq.error); };
+      });
+    });
+  }
+  function idbDel(key) {
+    return idbOpen().then(function (db) {
+      return new Promise(function (res, rej) {
+        var tx = db.transaction(IDB_STORE, 'readwrite');
+        tx.objectStore(IDB_STORE).delete(key);
+        tx.oncomplete = function () { res(); };
+        tx.onerror = function () { rej(tx.error); };
+      });
+    });
+  }
+
+  var NAIVE_BADGE = '<span class="badge naive">簡易CMYK<button class="q" type="button" data-term="cmyk" aria-label="CMYKとは" aria-expanded="false" style="margin-left:6px;border-color:currentColor;color:inherit">?</button></span>';
+
+  function renderIccBadge(saved) {
+    $('iccStatus').innerHTML = '<span class="badge icc">' + esc(state.iccName) +
+      (saved ? '<span class="savemark">この端末に保存済</span>' : '') + '</span>' +
+      '<button class="iccx" type="button" title="プロファイルを解除して端末の保存からも削除します">解除</button>';
+    $('iccStatus').querySelector('.iccx').addEventListener('click', function (e) {
+      e.stopPropagation();
+      clearIcc();
+    });
+  }
+
+  function clearIcc() {
+    state.iccProfile = null; state.iccName = ''; state.transform = null;
+    idbDel('profile').catch(function () {});
+    $('iccStatus').innerHTML = NAIVE_BADGE;
+    state.samples.forEach(computeCmyk);
+    render();
+    toast('ICCプロファイルを解除しました');
+  }
+
+  function applyIccBytes(bytes, fallbackName, opts) {
+    opts = opts || {};
+    var profile = new JCE.Profile();
+    return profile.loadPromise(bytes).then(function () {
+      if (!profile.loaded) throw new Error((profile.lastError && profile.lastError.text) || '不正なICCファイル');
+      if (profile.colorSpace !== 'CMYK') throw new Error('CMYKプロファイルではありません（' + profile.colorSpace + '）');
+      state.iccProfile = profile;
+      state.iccName = profile.name || profile.description || fallbackName;
+      rebuildTransform();
+      state.samples.forEach(computeCmyk);
+      renderIccBadge(opts.saved);
+      render();
+    });
+  }
+
   function handleIccFile(file) {
     file.arrayBuffer().then(function (buf) {
-      var profile = new JCE.Profile();
-      return profile.loadPromise(new Uint8Array(buf)).then(function () {
-        if (!profile.loaded) throw new Error((profile.lastError && profile.lastError.text) || '不正なICCファイル');
-        if (profile.colorSpace !== 'CMYK') throw new Error('CMYKプロファイルではありません（' + profile.colorSpace + '）');
-        state.iccProfile = profile;
-        state.iccName = profile.name || profile.description || file.name;
-        $('iccStatus').innerHTML = '<span class="badge icc">' + esc(state.iccName) + '</span>';
-        rebuildTransform();
-        state.samples.forEach(computeCmyk);
-        render();
-        toast('ICCプロファイルを適用しました');
+      var bytes = new Uint8Array(buf);
+      return applyIccBytes(bytes, file.name, { saved: true }).then(function () {
+        toast('ICCを適用しました。この端末に保存し、次回から自動適用します');
+        return idbSet('profile', { name: state.iccName, bytes: bytes }).catch(function () { /* プライベートブラウズ等では保存不可 */ });
       });
     }).catch(function (e) {
       toast('ICC読込エラー: ' + e.message);
     });
+  }
+
+  function restoreIcc() {
+    if (!window.indexedDB) return;
+    idbGet('profile').then(function (rec) {
+      if (rec && rec.bytes) {
+        applyIccBytes(rec.bytes, rec.name, { saved: true }).then(function () {
+          toast('保存済みのICC「' + state.iccName + '」を適用しました');
+        }).catch(function () { idbDel('profile').catch(function () {}); });
+      }
+    }).catch(function () {});
   }
 
   // ===== CSVエクスポート =====
@@ -359,5 +441,6 @@
     });
   }
   wireSampleBtn();
+  restoreIcc();
   render();
 })();
