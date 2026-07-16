@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>使い方・FAQ — CxF Color Converter</title>
+<meta name="description" content="CxF Color Converter の使い方、CxFファイルの書き出し方法、ICCプロファイルの設定、よくある質問と用語集。">
+<meta name="theme-color" content="#131418">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <nav class="nav">
+      <a class="brand" href="./"><span class="dot"></span>CxF Color Converter</a>
+      <div class="links">
+        <a href="./">変換ツール</a>
+        <a href="guide.html" class="on">使い方・FAQ</a>
+        <a href="https://github.com/DaisukeHori/cxf-color-converter" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </nav>
+    <div class="hero">
+      <div class="eyebrow">GUIDE / FAQ / GLOSSARY</div>
+      <h1>使い方ガイド</h1>
+      <p class="lede">測色計で測った色を、デザインデータで使える数値にするまでの流れと、よくある質問をまとめました。分からない用語は、ツール内の <button class="q" type="button" data-term="cxf" aria-label="用語説明の例" aria-expanded="false">?</button> ボタンでいつでも確認できます（このページのボタンも押せます）。</p>
+      <div class="spectrum-band" id="specBand"></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap doc">
+
+    <h2>3ステップで使う</h2>
+    <div class="stepcards">
+      <div class="stepcard">
+        <b>STEP 1</b>
+        <h3>測って、CxF3で書き出す</h3>
+        <p>分光測色計（i1Pro、eXact など）で色を測定し、付属ソフトから CxF3 形式で保存します。書き出し方法は下の説明へ。</p>
+      </div>
+      <div class="stepcard">
+        <b>STEP 2</b>
+        <h3>ドロップする</h3>
+        <p><a href="./">変換ツール</a>のドロップ欄に CxF ファイルを入れると、色見本と Lab・XYZ・sRGB・CMYK が即座に並びます。複数ファイルOK。</p>
+      </div>
+      <div class="stepcard">
+        <b>STEP 3</b>
+        <h3>数値を使う</h3>
+        <p>HEX はクリックでコピー。色見本をクリックすると全画面で色を確認できます。全データは CSV で一括ダウンロードできます。</p>
+      </div>
+    </div>
+    <div class="note">はじめての方は、変換ツールの「サンプルCxFで試す」を押すと、デモ用の7色でひと通りの機能を体験できます。</div>
+
+    <h2>CxFファイルの書き出し方</h2>
+    <p>CxF<button class="q" type="button" data-term="cxf" aria-label="CxFファイルとは" aria-expanded="false">?</button> は測色データの国際標準ファイルです。お使いの測定環境ごとの書き出し方の例です。</p>
+    <h3>X-Rite i1Profiler（i1Pro 2 / i1Pro 3）</h3>
+    <ol>
+      <li>i1Profiler の「チャート測定」でチャートを定義し、測定を実行します。</li>
+      <li>測定完了後、ページデータの「保存」ボタンをクリックします。</li>
+      <li>保存形式で CxF3（.cxf / .cmxf）を選んで保存すれば完了です。</li>
+    </ol>
+    <h3>その他の対応環境</h3>
+    <ul>
+      <li>X-Rite eXact / Ci シリーズ — 本体または DataCatcher 等の付属ツールから CxF3 で書き出せます。</li>
+      <li>TECHKON SpectroDens、コニカミノルタ MYIRO-1 など — CxF 出力に対応した測色計・ソフトの書き出しも読み込めます。</li>
+    </ul>
+    <div class="note">読み込めるのは CxF バージョン3（CxF3 / ISO 17972）です。古い CxF1・CxF2 のファイルはエラーになりますので、お使いのソフトで CxF3 として書き出し直してください。</div>
+
+    <h2>ICCプロファイルでCMYKを正確にする</h2>
+    <p>CMYK<button class="q" type="button" data-term="cmyk" aria-label="CMYKとは" aria-expanded="false">?</button> は印刷条件によって適切な値が変わります。ICC プロファイル<button class="q" type="button" data-term="icc" aria-label="ICCプロファイルとは" aria-expanded="false">?</button> を右のドロップ欄に入れると、その条件での正確な値になります。</p>
+    <ol>
+      <li><strong>プロファイルを用意する</strong> — 日本の枚葉オフセット印刷なら Japan Color 2011 Coated（<a href="https://japancolor.jp/icc.html" target="_blank" rel="noopener">Japan Color 認証制度サイト</a>からライセンス同意のうえダウンロード）。Photoshop 等をお使いなら、PCに Japan Color 2001 Coated.icc が既に入っています。</li>
+      <li><strong>ドロップする</strong> — CMYK 用プロファイル（.icc / .icm）をツール右側の欄へ。バッジがプロファイル名に変われば適用済みです。</li>
+      <li><strong>設定を選ぶ</strong> — 単色の色合わせなら「相対比色<button class="q" type="button" data-term="intent" aria-label="レンダリングインテントとは" aria-expanded="false">?</button>」+「BPC<button class="q" type="button" data-term="bpc" aria-label="BPCとは" aria-expanded="false">?</button> ON」がおすすめ（Photoshop の初期設定と同じ組み合わせです）。</li>
+    </ol>
+
+    <h2 id="accuracy">計算方法と精度</h2>
+    <p>反射率スペクトル<button class="q" type="button" data-term="spectrum" aria-label="スペクトルとは" aria-expanded="false">?</button>は 380–730nm / 10nm（36点）グリッドへ線形補間したうえで、CIE 1931 2°等色関数と標準イルミナント（colour-science 由来の正確なテーブル）で XYZ<button class="q" type="button" data-term="xyz" aria-label="XYZとは" aria-expanded="false">?</button> に積分し、L*a*b*<button class="q" type="button" data-term="lab" aria-label="Labとは" aria-expanded="false">?</button> へ変換します。白色点は「完全な白がぴったり L*=100, a*=b*=0 になる」テーブル自己整合値（CIE 15 の慣行）です。</p>
+    <p>sRGB<button class="q" type="button" data-term="srgb" aria-label="sRGBとは" aria-expanded="false">?</button> は Lab(D50) から Bradford 変換で D65 へ順応後、IEC 61966-2-1 の行列で算出します。ICC 経由の CMYK 変換には <a href="https://github.com/glennwilton/jsColorEngine" target="_blank" rel="noopener">jsColorEngine</a>（業界標準エンジン lcms2 と ΔE<button class="q" type="button" data-term="de" aria-label="ΔEとは" aria-expanded="false">?</button>≤0.06 の一致精度）を使用しています。実装は X-Rite i1Profiler の実測ファイルと lcms2 系リファレンス値による27件のユニットテストで検証済みです。</p>
+
+    <h2>よくある質問</h2>
+
+    <details class="faq">
+      <summary>CxFファイルとは何ですか？ どうやって用意しますか？</summary>
+      <div class="a"><p>測った色のデータ（分光反射率など）を機器やソフトの間でやり取りするための国際標準ファイルです（ISO 17972）。X-Rite の i1Pro・eXact などの分光測色計と付属ソフトで色を測定し、CxF3 形式で保存すると作れます。上の「CxFファイルの書き出し方」も参考にしてください。</p></div>
+    </details>
+
+    <details class="faq">
+      <summary>ファイルが読み込めません。対応している形式は？</summary>
+      <div class="a"><p>対応しているのは CxF バージョン3（CxF3）です。拡張子は .cxf / .cmxf / .mxf / .xml のいずれでも中身が CxF3 なら読み込めます。古い CxF1・CxF2 は構造が異なるため非対応です。その場合はエラーメッセージが出ますので、お使いのソフトで CxF3 として書き出し直してください。また、スペクトルも Lab 等の色数値も入っていないファイルは変換できません。</p></div>
+    </details>
+
+    <details class="faq">
+      <summary>測定データは外部に送信されますか？</summary>
+      <div class="a"><p>いいえ。ファイルの解析も色計算も、すべてお使いのブラウザの中だけで行われ、サーバーには一切送信されません。社外秘のブランドカラーや未発表製品の測定値でも安心して使えます。ページを一度読み込めば、機内モードでも動作します。</p></div>
+    </details>
+
+    <details class="faq">
+      <summary>M0 / M1 / M2 のどれを見ればいいですか？</summary>
+      <div class="a"><p>測定時に当てる光の条件の違いです（ISO 13655）。印刷物の評価・入稿基準には M1（蛍光増白剤の効果を含む業界標準）、過去の測定データとの比較には M0、増白剤の影響を除いて素の色を見たいときは M2 が使われます。迷ったら、取引先や社内の運用ルールに合わせるのが確実です。</p></div>
+    </details>
+
+    <details class="faq">
+      <summary>画面に表示される色は、実物と同じ色ですか？</summary>
+      <div class="a"><p>「できるだけ近い色」です。表示はお使いのモニタの性能とキャリブレーション状態に依存し、モニタで出せない鮮やかな色（sRGB域外）は一番近い色に丸めて表示しています（その場合はスウォッチに「sRGB域外」と表示されます）。一方、L*a*b* などの数値は測定データから正確に計算した値なので、色指定や検査にはこちらを使ってください。</p></div>
+    </details>
+
+    <details class="faq">
+      <summary>CMYK値が Photoshop での変換結果と少し違います。なぜですか？</summary>
+      <div class="a"><p>CMYK 変換はプロファイル・インテント・BPC の3つの設定で結果が変わります。Photoshop と比べる場合は、同じ ICC プロファイルをドロップし、「相対比色 + BPC ON」（Photoshop の初期設定）に合わせてください。これで実用上一致するはずです。なお、ICC を入れていないときの「簡易・参考値」は数式による当たり付け用の値で、印刷入稿には使えません。</p></div>
+    </details>
+
+    <details class="faq">
+      <summary>Japan Color の ICC プロファイルはどこで入手できますか？</summary>
+      <div class="a"><p>Japan Color 2011 は <a href="https://japancolor.jp/icc.html" target="_blank" rel="noopener">Japan Color 認証制度の公式サイト</a>から、ライセンス契約に同意のうえ無償でダウンロードできます（配布条件があるため本ツールには同梱していません）。また、Adobe 製品をお使いの場合は Japan Color 2001 Coated.icc が既に PC にインストールされています（Windows: C:\Windows\System32\spool\drivers\color、Mac: /Library/Application Support/Adobe/Color/Profiles/Recommended）。</p></div>
+    </details>
+
+    <details class="faq">
+      <summary>Pantone や DIC の色番号に変換できますか？</summary>
+      <div class="a"><p>現在は対応していません。Pantone・DIC の色ライブラリは各社の権利物で、データを本ツールに同梱できないためです。今後、お手元にあるライブラリファイルを読み込んで ΔE が最小の色を検索する方式で対応する予定です。それまでは、本ツールで得た L*a*b* 値を Illustrator や各社ツールの色検索に入力する方法をおすすめします。</p></div>
+    </details>
+
+    <details class="faq">
+      <summary>測色器メーカー純正ソフトの表示値と、小数点以下がわずかに違います</summary>
+      <div class="a"><p>正常な範囲です。ソフトによって計算に使う波長間隔（10nm か 5nm/1nm か）や白色点の定義が少しずつ異なり、その差は多くの場合 ΔE2000 で 0.1 以下 — 人の目では絶対に区別できないレベルです。本ツールの計算方法は上の「計算方法と精度」に公開しています。</p></div>
+    </details>
+
+    <details class="faq">
+      <summary>スマホやタブレットでも使えますか？</summary>
+      <div class="a"><p>使えます。レイアウトはスマホ画面にも対応しており、クラウドストレージやメール添付から CxF ファイルを端末に保存し、ファイル選択から読み込めます。ただし色の見た目の確認は、キャリブレーションされた PC モニタで行うことをおすすめします。</p></div>
+    </details>
+
+    <h2>用語ミニ辞典</h2>
+    <p>ツール内の <span class="q" style="cursor:default" aria-hidden="true">?</span> ボタンで表示される説明の一覧です。</p>
+    <div class="termgrid" id="termList"></div>
+
+  </div>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <span>© 2026 Daisuke Hori · MIT License（同梱 <a href="https://github.com/glennwilton/jsColorEngine" target="_blank" rel="noopener">jsColorEngine</a> は MPL-2.0）</span>
+    <a href="./">変換ツールへ戻る</a>
+    <a href="https://github.com/DaisukeHori/cxf-color-converter/issues" target="_blank" rel="noopener">不具合・要望はこちら</a>
+    <span>CxF® は X-Rite, Incorporated の登録商標です</span>
+  </div>
+</footer>
+
+<script src="js/colorlib.js"></script>
+<script src="js/terms.js"></script>
+<script>
+(function(){
+  'use strict';
+  // シグネチャー: 波長帯グラデーション
+  var C = window.CxFColor;
+  var stops = [];
+  for (var wl = 380; wl <= 730; wl += 10) {
+    stops.push(C.wavelengthToCss(wl) + ' ' + (((wl - 380) / 350) * 100).toFixed(1) + '%');
+  }
+  document.getElementById('specBand').style.background = 'linear-gradient(90deg,' + stops.join(',') + ')';
+
+  // 用語集を辞書から自動生成
+  var T = window.CxFTerms.TERMS;
+  var box = document.getElementById('termList');
+  var html = '';
+  Object.keys(T).forEach(function(key){
+    html += '<div class="term"><h4>' + T[key].title + '</h4><p>' + T[key].body + '</p></div>';
+  });
+  box.innerHTML = html;
+})();
+</script>
+</body>
+</html>

@@ -15,6 +15,8 @@
 - **sRGB** — Lab(D50) から Bradford 変換で D65 へ順応後、IEC 61966-2-1 行列で算出。色域外はクランプして明示
 - **CMYK（ICC 高精度）** — 手元の CMYK ICC プロファイル（Japan Color 2001/2011 Coated 等）をドロップすると、[jsColorEngine](https://github.com/glennwilton/jsColorEngine)（lcms2 と ΔE≤0.06 の一致精度）で Lab→CMYK 変換。レンダリングインテント（相対比色 / 知覚的）と BPC を選択可能
 - **CMYK（簡易）** — ICC 未指定時は sRGB からの数式変換による参考値を表示（バッジで明示）
+- **全画面カラープレビュー** — 色見本をクリックすると画面全体をその色で表示。壁一面で色を確かめる感覚で確認できます
+- **用語ガイド内蔵** — M0/M1/M2、Lab、インテント、BPC など専門用語の横の「?」ボタンで、平易な説明が吹き出し表示されます
 - **スペクトル可視化** — 380–730nm の実波長色グラデーションで反射率カーブを描画
 - **CSV エクスポート** — Lab / XYZ / sRGB / CMYK / 36点スペクトルを一括出力（Excel 対応 BOM 付き UTF-8）
 
@@ -24,6 +26,8 @@
 2. CxF3 ファイル（.cxf / .mxf / .xml）をドロップ（複数可）
 3. （任意）CMYK ICC プロファイル（.icc / .icm）をドロップ
 4. 必要に応じて表示光源・インテント・BPC を切り替え、CSV でダウンロード
+
+詳しい手順とよくある質問は [使い方・FAQページ](https://daisukehori.github.io/cxf-color-converter/guide.html) にまとめています。
 
 初めての方は「サンプルCxFで試す」ボタンでデモデータを読み込めます。
 
@@ -65,9 +69,13 @@ npm test
 ## リポジトリ構成
 
 ```
-index.html            # UI（単一ページ）
+index.html            # 変換ツール
+guide.html            # 使い方・FAQ・用語集
+css/style.css         # 共通スタイル（ダークUI）
 js/colorlib.js        # 色科学: スペクトル→XYZ→Lab→sRGB、ΔE2000、簡易CMYK
 js/cxf-parser.js      # CxF3 パーサー
+js/app.js             # 変換ツールのUIロジック
+js/terms.js           # 用語辞書 + 「?」吹き出しエンジン
 vendor/               # jsColorEngine (MPL-2.0) ブラウザビルド
 samples/sample.cxf    # デモ用合成データ
 test/run-tests.js     # ユニットテスト

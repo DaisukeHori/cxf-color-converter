@@ -4,452 +4,101 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CxF Color Converter — 分光測定データを Lab / XYZ / sRGB / CMYK へ</title>
-<meta name="description" content="CxF3 (ISO 17972) ファイルをブラウザだけで Lab・XYZ・sRGB・CMYK に変換。ICCプロファイル対応、サーバー送信なし。">
+<meta name="description" content="CxF3 (ISO 17972) ファイルをブラウザだけで Lab・XYZ・sRGB・CMYK に変換。ICCプロファイル対応、ファイルはどこにも送信されません。">
+<meta name="theme-color" content="#131418">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-:root{
-  --paper:#FAFAF7;
-  --panel:#FFFFFF;
-  --ink:#17191C;
-  --sub:#676D74;
-  --line:#E4E5E1;
-  --indigo:#23508F;
-  --indigo-soft:#EDF2F9;
-  --warn:#8F5B23;
-  --warn-soft:#F9F3ED;
-  --mono:'IBM Plex Mono',ui-monospace,monospace;
-  --sans:'IBM Plex Sans JP',system-ui,sans-serif;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-html{font-size:15px}
-body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.65;-webkit-font-smoothing:antialiased}
-a{color:var(--indigo)}
-button{font-family:inherit;font-size:inherit;cursor:pointer}
-
-/* ===== ヘッダ: 波長帯がシグネチャー ===== */
-header{padding:44px 24px 0;max-width:1060px;margin:0 auto}
-.eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;color:var(--sub);text-transform:uppercase}
-h1{font-size:1.9rem;font-weight:700;letter-spacing:-.01em;margin:.35rem 0 .4rem}
-.lede{color:var(--sub);max-width:46em}
-.spectrum-band{height:7px;border-radius:4px;margin:26px 0 0;position:relative}
-.spectrum-band::after{content:'380nm — 可視スペクトル — 730nm';position:absolute;right:0;top:12px;font-family:var(--mono);font-size:.64rem;color:var(--sub);letter-spacing:.08em}
-
-main{max-width:1060px;margin:0 auto;padding:40px 24px 72px}
-
-/* ===== ドロップゾーン ===== */
-.drops{display:grid;grid-template-columns:1.6fr 1fr;gap:14px}
-@media(max-width:760px){.drops{grid-template-columns:1fr}}
-.drop{background:var(--panel);border:1.5px dashed var(--line);border-radius:8px;padding:26px 22px;text-align:center;transition:border-color .15s,background .15s;position:relative}
-.drop.dragover{border-color:var(--indigo);background:var(--indigo-soft)}
-.drop h2{font-size:1rem;font-weight:700}
-.drop p{font-size:.82rem;color:var(--sub);margin-top:4px}
-.drop .hint{font-family:var(--mono);font-size:.7rem;margin-top:10px;color:var(--sub)}
-.drop input{display:none}
-.drop .status{margin-top:12px;font-size:.8rem}
-.status .ok{color:var(--indigo);font-weight:500}
-.btn-link{background:none;border:none;color:var(--indigo);text-decoration:underline;padding:0;font-size:inherit}
-
-/* ===== 設定バー ===== */
-.controls{display:flex;flex-wrap:wrap;align-items:center;gap:20px;margin:22px 0 30px;padding:14px 18px;background:var(--panel);border:1px solid var(--line);border-radius:8px;font-size:.85rem}
-.ctrl{display:flex;align-items:center;gap:8px}
-.ctrl label{color:var(--sub)}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
-.seg button{background:var(--panel);border:none;padding:5px 13px;color:var(--sub)}
-.seg button.on{background:var(--indigo);color:#fff}
-.badge{font-family:var(--mono);font-size:.7rem;padding:3px 9px;border-radius:20px;letter-spacing:.03em}
-.badge.icc{background:var(--indigo-soft);color:var(--indigo)}
-.badge.naive{background:var(--warn-soft);color:var(--warn)}
-.controls .spacer{flex:1}
-.btn{background:var(--indigo);color:#fff;border:none;border-radius:6px;padding:8px 18px;font-weight:500}
-.btn:disabled{opacity:.35;cursor:default}
-.btn.ghost{background:none;color:var(--sub);border:1px solid var(--line)}
-
-/* ===== 結果カード ===== */
-.empty{color:var(--sub);text-align:center;padding:56px 0;border:1px dashed var(--line);border-radius:8px;font-size:.9rem}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;margin-bottom:14px;display:grid;grid-template-columns:120px 300px 1fr;overflow:hidden}
-@media(max-width:900px){.card{grid-template-columns:90px 1fr}.card .chart{grid-column:1/-1;border-top:1px solid var(--line)}}
-.swatch{position:relative}
-.swatch .fill{position:absolute;inset:0}
-.swatch .gamut{position:absolute;left:6px;bottom:6px;font-family:var(--mono);font-size:.6rem;background:rgba(255,255,255,.85);padding:1px 6px;border-radius:3px;color:var(--warn)}
-.chart{padding:12px 14px 8px;border-right:1px solid var(--line)}
-.chart svg{display:block;width:100%;height:96px}
-.chart .axis{font-family:var(--mono);font-size:.6rem;fill:var(--sub)}
-.chart .none{font-size:.75rem;color:var(--sub);padding:34px 0;text-align:center}
-.vals{padding:14px 18px 12px}
-.vals .head{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;margin-bottom:8px}
-.vals .name{font-weight:700}
-.vals .meta{font-family:var(--mono);font-size:.68rem;color:var(--sub)}
-.tag{font-family:var(--mono);font-size:.64rem;border:1px solid var(--line);border-radius:4px;padding:1px 7px;color:var(--sub)}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px 18px}
-.kv{font-family:var(--mono);font-size:.8rem}
-.kv b{display:block;font-family:var(--sans);font-weight:500;font-size:.68rem;color:var(--sub);letter-spacing:.05em}
-.kv .cmyk-src{font-size:.62rem;color:var(--sub)}
-.copy{background:none;border:none;color:var(--sub);font-size:.7rem;padding:0 4px}
-.copy:hover{color:var(--indigo)}
-
-/* ===== フッタ ===== */
-.notes{margin-top:44px;padding-top:22px;border-top:1px solid var(--line);font-size:.78rem;color:var(--sub)}
-.notes h3{font-size:.82rem;color:var(--ink);margin-bottom:6px}
-.notes p{margin-bottom:8px;max-width:62em}
-.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 20px;border-radius:6px;font-size:.85rem;display:none;z-index:50}
-@media(prefers-reduced-motion:no-preference){.card{animation:up .25s ease both}@keyframes up{from{opacity:0;transform:translateY(6px)}to{opacity:1}}}
-</style>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<header>
-  <div class="eyebrow">CxF3 / ISO 17972 → Lab · XYZ · sRGB · CMYK</div>
-  <h1>CxF Color Converter</h1>
-  <p class="lede">分光測色計が書き出した CxF ファイルをドロップするだけで、反射率スペクトルから色数値へ変換します。すべてブラウザ内で計算され、ファイルはどこにも送信されません。</p>
-  <div class="spectrum-band" id="specBand"></div>
+<header class="site">
+  <div class="wrap">
+    <nav class="nav">
+      <a class="brand" href="./"><span class="dot"></span>CxF Color Converter</a>
+      <div class="links">
+        <a href="./" class="on">変換ツール</a>
+        <a href="guide.html">使い方・FAQ</a>
+        <a href="https://github.com/DaisukeHori/cxf-color-converter" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </nav>
+    <div class="hero">
+      <div class="eyebrow">CxF3 / ISO 17972 → LAB · XYZ · SRGB · CMYK</div>
+      <h1>測った色を、そのまま使える数値に。</h1>
+      <p class="lede">分光測色計が書き出した CxF<button class="q" type="button" data-term="cxf" aria-label="CxFファイルとは" aria-expanded="false">?</button> ファイルをドロップするだけで、色見本と Lab・sRGB・CMYK 値がその場に並びます。計算はすべてブラウザの中で完結し、ファイルはどこにも送信されません。</p>
+      <div class="spectrum-band" id="specBand"></div>
+      <div class="band-label">380nm ─ 可視スペクトル ─ 730nm</div>
+    </div>
+  </div>
 </header>
 
 <main>
-  <section class="drops">
-    <div class="drop" id="dropCxf">
-      <h2>CxF3 ファイルをドロップ</h2>
-      <p>複数ファイル可 · クリックで選択</p>
-      <div class="hint">.cxf .mxf .xml — X-Rite i1Profiler / eXact / Ci シリーズ等の出力</div>
-      <div class="status" id="cxfStatus"><button class="btn-link" id="loadSample">サンプルCxFで試す</button></div>
-      <input type="file" id="fileCxf" multiple accept=".cxf,.mxf,.xml,.txt">
-    </div>
-    <div class="drop" id="dropIcc">
-      <h2>CMYK ICC プロファイル<span style="font-weight:400;color:var(--sub)">（任意）</span></h2>
-      <p>Japan Color 2001/2011 Coated 等</p>
-      <div class="hint">.icc .icm — 未指定時は簡易CMYK（参考値）</div>
-      <div class="status" id="iccStatus"><span class="badge naive">簡易CMYK</span></div>
-      <input type="file" id="fileIcc" accept=".icc,.icm">
-    </div>
-  </section>
+  <div class="wrap">
+    <section class="drops">
+      <div class="drop" id="dropCxf">
+        <h2>CxF3 ファイルをドロップ</h2>
+        <p>複数ファイル可 · クリックで選択</p>
+        <div class="hint">.cxf .mxf .xml — X-Rite i1Profiler / eXact / Ci シリーズ等の出力</div>
+        <div class="status" id="cxfStatus"><button class="btn-link" id="loadSample" type="button">サンプルCxFで試す</button></div>
+        <input type="file" id="fileCxf" multiple accept=".cxf,.mxf,.cmxf,.xml,.txt">
+      </div>
+      <div class="drop" id="dropIcc">
+        <h2>CMYK ICC プロファイル<span class="opt">（任意）</span><button class="q" type="button" data-term="icc" aria-label="ICCプロファイルとは" aria-expanded="false">?</button></h2>
+        <p>Japan Color 2001/2011 Coated 等</p>
+        <div class="hint">.icc .icm — 未指定時は簡易CMYK（参考値）</div>
+        <div class="status" id="iccStatus"><span class="badge naive">簡易CMYK<button class="q" type="button" data-term="cmyk" aria-label="CMYKとは" aria-expanded="false" style="margin-left:6px;border-color:currentColor;color:inherit">?</button></span></div>
+        <input type="file" id="fileIcc" accept=".icc,.icm">
+      </div>
+    </section>
 
-  <section class="controls">
-    <div class="ctrl">
-      <label>表示光源</label>
-      <span class="seg" id="segIll">
-        <button data-v="D50" class="on">D50/2°</button>
-        <button data-v="D65">D65/2°</button>
-      </span>
-    </div>
-    <div class="ctrl">
-      <label>ICCインテント</label>
-      <span class="seg" id="segIntent">
-        <button data-v="relative" class="on">相対比色</button>
-        <button data-v="perceptual">知覚的</button>
-      </span>
-    </div>
-    <div class="ctrl">
-      <label>BPC</label>
-      <span class="seg" id="segBpc">
-        <button data-v="on" class="on">ON</button>
-        <button data-v="off">OFF</button>
-      </span>
-    </div>
-    <span class="spacer"></span>
-    <button class="btn ghost" id="btnClear" disabled>クリア</button>
-    <button class="btn" id="btnCsv" disabled>CSVダウンロード</button>
-  </section>
+    <section class="controls">
+      <div class="ctrl">
+        <label>表示光源<button class="q" type="button" data-term="illuminant" aria-label="表示光源とは" aria-expanded="false">?</button></label>
+        <span class="seg" id="segIll">
+          <button type="button" data-v="D50" class="on">D50/2°</button>
+          <button type="button" data-v="D65">D65/2°</button>
+        </span>
+      </div>
+      <div class="ctrl">
+        <label>インテント<button class="q" type="button" data-term="intent" aria-label="レンダリングインテントとは" aria-expanded="false">?</button></label>
+        <span class="seg" id="segIntent">
+          <button type="button" data-v="relative" class="on">相対比色</button>
+          <button type="button" data-v="perceptual">知覚的</button>
+        </span>
+      </div>
+      <div class="ctrl">
+        <label>BPC<button class="q" type="button" data-term="bpc" aria-label="BPC（黒点補正）とは" aria-expanded="false">?</button></label>
+        <span class="seg" id="segBpc">
+          <button type="button" data-v="on" class="on">ON</button>
+          <button type="button" data-v="off">OFF</button>
+        </span>
+      </div>
+      <span class="spacer"></span>
+      <button class="btn ghost" id="btnClear" type="button" disabled>クリア</button>
+      <button class="btn primary" id="btnCsv" type="button" disabled>CSVダウンロード</button>
+    </section>
 
-  <section id="results"><div class="empty">まだデータがありません。CxF3 ファイルをドロップしてください。</div></section>
-
-  <section class="notes">
-    <h3>計算方法と精度について</h3>
-    <p>反射率スペクトルは 380–730nm / 10nm（36点）グリッドへ線形補間したうえで、CIE 1931 2°等色関数と標準イルミナント SPD（colour-science 由来の正確なテーブル）で三刺激値 XYZ に積分し、CIELAB へ変換します。白色点はテーブル自己整合値（完全拡散反射面が L*=100, a*=b*=0 になる定義）です。sRGB は Lab(D50) から Bradford 変換で D65 へ順応後、IEC 61966-2-1 行列で算出します。</p>
-    <p><strong>CMYK:</strong> ICC プロファイル読み込み時は <a href="https://github.com/glennwilton/jsColorEngine" target="_blank" rel="noopener">jsColorEngine</a>（MPL-2.0、lcms2 と ΔE≤0.06 の一致精度）で Lab→CMYK 変換します（PCS の仕様上、常に D50 の Lab を入力します）。未読み込み時の簡易CMYKは sRGB からの数式変換による<strong>参考値</strong>で、印刷入稿には使えません。Japan Color 2011 の ICC プロファイルは <a href="https://japancolor.jp/icc.html" target="_blank" rel="noopener">Japan Color 認証制度サイト</a>からライセンス同意のうえ入手できます（本ツールには同梱していません）。</p>
-    <p>CxF1 / CxF2 形式には未対応です。Pantone / DIC など特色ライブラリへの近似検索は、ライセンス上の理由からデータを同梱せず、今後「手元のライブラリファイル読み込み方式」で対応予定です。</p>
-    <p style="margin-top:14px">© 2026 Daisuke Hori — <a href="https://github.com/DaisukeHori/cxf-color-converter" target="_blank" rel="noopener">GitHub</a> · MIT License（同梱 jsColorEngine は MPL-2.0）</p>
-  </section>
+    <section id="results"></section>
+  </div>
 </main>
 
-<div class="toast" id="toast"></div>
+<footer class="site">
+  <div class="wrap">
+    <span>© 2026 Daisuke Hori · MIT License（同梱 <a href="https://github.com/glennwilton/jsColorEngine" target="_blank" rel="noopener">jsColorEngine</a> は MPL-2.0）</span>
+    <a href="guide.html">使い方・FAQ・用語集</a>
+    <a href="guide.html#accuracy">計算方法と精度</a>
+    <a href="https://japancolor.jp/icc.html" target="_blank" rel="noopener">Japan Color ICC の入手先</a>
+    <span>CxF® は X-Rite, Incorporated の登録商標です</span>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status"></div>
 
 <script src="vendor/jsColorEngineWeb.js"></script>
 <script src="js/colorlib.js"></script>
 <script src="js/cxf-parser.js"></script>
-<script>
-(function(){
-'use strict';
-var C = window.CxFColor, P = window.CxFParser, JCE = window.jsColorEngine;
-
-// ===== 状態 =====
-var state = {
-  samples: [],          // {file, obj, convD50, convView, cmyk, cmykSource}
-  ill: 'D50',
-  intent: 'relative',
-  bpc: true,
-  iccProfile: null,
-  iccName: '',
-  transform: null
-};
-
-// ===== シグネチャー: 波長帯グラデーション生成 =====
-(function(){
-  var stops = [];
-  for (var wl = 380; wl <= 730; wl += 10) {
-    stops.push(C.wavelengthToCss(wl) + ' ' + (((wl - 380) / 350) * 100).toFixed(1) + '%');
-  }
-  var g = 'linear-gradient(90deg,' + stops.join(',') + ')';
-  document.getElementById('specBand').style.background = g;
-  window.__specGradientStops = stops;
-})();
-
-// ===== ユーティリティ =====
-function $(id){ return document.getElementById(id); }
-function toast(msg){
-  var t = $('toast');
-  t.textContent = msg; t.style.display = 'block';
-  clearTimeout(t._tm); t._tm = setTimeout(function(){ t.style.display = 'none'; }, 2400);
-}
-function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
-function fmt(v, d){ return (Math.round(v * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d); }
-
-// ===== ICC変換の構築 =====
-function rebuildTransform(){
-  state.transform = null;
-  if (!state.iccProfile) return;
-  try {
-    var t = new JCE.Transform({ bpc: state.bpc });
-    t.create('*lab', state.iccProfile, state.intent === 'perceptual' ? JCE.eIntent.perceptual : JCE.eIntent.relative);
-    state.transform = t;
-  } catch(e) {
-    toast('ICC変換の構築に失敗: ' + e.message);
-    state.transform = null;
-  }
-}
-
-function computeCmyk(s){
-  // ICCのPCSは常にD50 Lab → convD50のLabを入力
-  if (state.transform && s.convD50 && s.convD50.Lab) {
-    try {
-      var out = state.transform.transform(JCE.color.Lab(s.convD50.Lab[0], s.convD50.Lab[1], s.convD50.Lab[2]));
-      s.cmyk = { c: out.C, m: out.M, y: out.Y, k: out.K };
-      s.cmykSource = state.iccName;
-      return;
-    } catch(e) { /* fall through to naive */ }
-  }
-  var base = s.convView || s.convD50;
-  s.cmyk = base && base.rgb ? C.naiveCmyk(base.rgb) : null;
-  s.cmykSource = '簡易（参考値）';
-}
-
-function recomputeAll(){
-  state.samples.forEach(function(s){
-    s.convD50 = C.convertSample(s.obj, 'D50');
-    s.convView = state.ill === 'D50' ? s.convD50 : C.convertSample(s.obj, state.ill);
-    computeCmyk(s);
-  });
-  render();
-}
-
-// ===== スペクトルSVG =====
-var GRAD_DEF = (function(){
-  var stops = '';
-  for (var i = 0; i < C.N_WL; i++) {
-    stops += '<stop offset="' + ((i / (C.N_WL - 1)) * 100).toFixed(1) + '%" stop-color="' + C.wavelengthToCss(C.WL_GRID[i]) + '"/>';
-  }
-  return stops;
-})();
-
-function spectrumSvg(spec36, uid){
-  if (!spec36) return '<div class="none">スペクトルなし（' + '直接値から変換' + '）</div>';
-  var W = 300, H = 96, padL = 4, padB = 14, padT = 6;
-  var iw = W - padL * 2, ih = H - padB - padT;
-  var maxR = 1.0;
-  for (var i = 0; i < spec36.length; i++) if (spec36[i] > maxR) maxR = spec36[i];
-  var pts = [];
-  for (var j = 0; j < C.N_WL; j++) {
-    var x = padL + (j / (C.N_WL - 1)) * iw;
-    var y = padT + ih - (Math.max(0, spec36[j]) / maxR) * ih;
-    pts.push(x.toFixed(1) + ',' + y.toFixed(1));
-  }
-  var line = pts.join(' ');
-  var area = padL + ',' + (padT + ih) + ' ' + line + ' ' + (padL + iw) + ',' + (padT + ih);
-  return '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="反射率スペクトル">' +
-    '<defs><linearGradient id="g' + uid + '" x1="0" y1="0" x2="1" y2="0">' + GRAD_DEF + '</linearGradient></defs>' +
-    '<polygon points="' + area + '" fill="url(#g' + uid + ')" opacity="0.55"/>' +
-    '<polyline points="' + line + '" fill="none" stroke="var(--ink)" stroke-width="1.4"/>' +
-    '<line x1="' + padL + '" y1="' + (padT + ih) + '" x2="' + (padL + iw) + '" y2="' + (padT + ih) + '" stroke="var(--line)"/>' +
-    '<text class="axis" x="' + padL + '" y="' + (H - 2) + '">380</text>' +
-    '<text class="axis" x="' + (padL + iw) + '" y="' + (H - 2) + '" text-anchor="end">730nm</text>' +
-    '<text class="axis" x="' + (padL + iw) + '" y="' + (padT + 8) + '" text-anchor="end">R ' + (maxR > 1 ? maxR.toFixed(2) : '1.0') + '</text>' +
-    '</svg>';
-}
-
-// ===== 描画 =====
-function render(){
-  var box = $('results');
-  if (state.samples.length === 0) {
-    box.innerHTML = '<div class="empty">まだデータがありません。CxF3 ファイルをドロップしてください。</div>';
-    $('btnCsv').disabled = true; $('btnClear').disabled = true;
-    return;
-  }
-  $('btnCsv').disabled = false; $('btnClear').disabled = false;
-  var html = '';
-  state.samples.forEach(function(s, idx){
-    var cv = s.convView, cd = s.convD50;
-    if (!cv) return;
-    var lab = cv.Lab, xyz = cv.XYZ, rgb = cv.rgb;
-    var srcLabel = { spectrum: 'スペクトル', lab: 'Lab直接値', xyz: 'XYZ直接値', srgb: 'sRGB直接値' }[cv.source] || cv.source;
-    html += '<article class="card">' +
-      '<div class="swatch"><div class="fill" style="background:' + cv.hex + '"></div>' +
-        (rgb && rgb.outOfGamut ? '<span class="gamut">sRGB域外</span>' : '') + '</div>' +
-      '<div class="chart">' + spectrumSvg(cv.spectrum36, idx) + '</div>' +
-      '<div class="vals">' +
-        '<div class="head"><span class="name">' + esc(s.obj.name) + '</span>' +
-          '<span class="tag">' + esc(s.obj.objectType || 'Object') + '</span>' +
-          '<span class="tag">' + esc(srcLabel) + '</span>' +
-          '<span class="meta">' + esc(s.file) + '</span></div>' +
-        '<div class="grid">' +
-          (lab ? '<div class="kv"><b>L*a*b* (' + state.ill + '/2°)</b>' + fmt(lab[0],2) + ' / ' + fmt(lab[1],2) + ' / ' + fmt(lab[2],2) + '</div>' : '') +
-          (xyz ? '<div class="kv"><b>XYZ</b>' + fmt(xyz[0],2) + ' / ' + fmt(xyz[1],2) + ' / ' + fmt(xyz[2],2) + '</div>' : '') +
-          (rgb ? '<div class="kv"><b>sRGB</b>' + rgb.r + ' ' + rgb.g + ' ' + rgb.b +
-            ' <button class="copy" data-copy="' + cv.hex + '" title="HEXをコピー">' + cv.hex + ' ⧉</button></div>' : '') +
-          (s.cmyk ? '<div class="kv"><b>CMYK</b>' + s.cmyk.c + ' / ' + s.cmyk.m + ' / ' + s.cmyk.y + ' / ' + s.cmyk.k +
-            '<span class="cmyk-src"><br>' + esc(s.cmykSource) + '</span></div>' : '') +
-        '</div>' +
-      '</div></article>';
-  });
-  box.innerHTML = html;
-  box.querySelectorAll('.copy').forEach(function(b){
-    b.addEventListener('click', function(){
-      navigator.clipboard.writeText(b.getAttribute('data-copy')).then(function(){ toast(b.getAttribute('data-copy') + ' をコピーしました'); });
-    });
-  });
-}
-
-// ===== CxFファイル処理 =====
-function handleCxfFiles(files){
-  var added = 0, errs = [];
-  var arr = Array.prototype.slice.call(files);
-  var done = 0;
-  arr.forEach(function(file){
-    file.text().then(function(text){
-      try {
-        var parsed = P.parseCxF(text);
-        parsed.objects.forEach(function(obj){
-          state.samples.push({ file: file.name, obj: obj, convD50: null, convView: null, cmyk: null, cmykSource: '' });
-          added++;
-        });
-        if (parsed.warnings.length) parsed.warnings.forEach(function(w){ errs.push(file.name + ': ' + w); });
-        var devInfo = parsed.device.name ? parsed.device.name + (parsed.device.serial ? ' #' + parsed.device.serial : '') : '';
-        $('cxfStatus').innerHTML = '<span class="ok">' + esc(file.name) + ' — ' + parsed.objects.length + '色 読込</span>' +
-          (devInfo ? ' <span class="meta" style="font-family:var(--mono);font-size:.68rem;color:var(--sub)">' + esc(devInfo) + '</span>' : '');
-      } catch(e) {
-        errs.push(file.name + ': ' + e.message);
-      }
-      done++;
-      if (done === arr.length) {
-        if (added > 0) recomputeAll();
-        if (errs.length) toast(errs[0]);
-        else if (added > 0) toast(added + '色を変換しました');
-      }
-    });
-  });
-}
-
-// ===== ICCファイル処理 =====
-function handleIccFile(file){
-  file.arrayBuffer().then(function(buf){
-    var profile = new JCE.Profile();
-    return profile.loadPromise(new Uint8Array(buf)).then(function(){
-      if (!profile.loaded) throw new Error(profile.lastError && profile.lastError.text || '不正なICCファイル');
-      if (profile.colorSpace !== 'CMYK') throw new Error('CMYKプロファイルではありません（' + profile.colorSpace + '）');
-      state.iccProfile = profile;
-      state.iccName = profile.name || profile.description || file.name;
-      $('iccStatus').innerHTML = '<span class="badge icc">' + esc(state.iccName) + '</span>';
-      rebuildTransform();
-      state.samples.forEach(computeCmyk);
-      render();
-      toast('ICCプロファイルを適用しました');
-    });
-  }).catch(function(e){
-    toast('ICC読込エラー: ' + e.message);
-  });
-}
-
-// ===== CSVエクスポート =====
-function downloadCsv(){
-  var head = ['file','name','object_type','source','illuminant','L','a','b','X','Y','Z','R','G','B','HEX','C','M','Y_','K','cmyk_source'];
-  for (var w = 0; w < C.N_WL; w++) head.push('R' + C.WL_GRID[w]);
-  var rows = [head];
-  state.samples.forEach(function(s){
-    var cv = s.convView; if (!cv) return;
-    var r = [s.file, s.obj.name, s.obj.objectType, cv.source, state.ill];
-    r = r.concat(cv.Lab ? cv.Lab.map(function(v){return fmt(v,4);}) : ['','','']);
-    r = r.concat(cv.XYZ ? cv.XYZ.map(function(v){return fmt(v,4);}) : ['','','']);
-    r = r.concat(cv.rgb ? [cv.rgb.r, cv.rgb.g, cv.rgb.b, cv.hex] : ['','','','']);
-    r = r.concat(s.cmyk ? [s.cmyk.c, s.cmyk.m, s.cmyk.y, s.cmyk.k, s.cmykSource] : ['','','','','']);
-    for (var w2 = 0; w2 < C.N_WL; w2++) r.push(cv.spectrum36 ? fmt(cv.spectrum36[w2], 6) : '');
-    rows.push(r);
-  });
-  var csv = '\uFEFF' + rows.map(function(r){
-    return r.map(function(c){ c = String(c == null ? '' : c); return /[",\n]/.test(c) ? '"' + c.replace(/"/g,'""') + '"' : c; }).join(',');
-  }).join('\r\n');
-  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'cxf-colors-' + new Date().toISOString().slice(0,10) + '.csv';
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-// ===== イベント配線 =====
-function wireDrop(zone, input, handler, multi){
-  zone.addEventListener('click', function(e){ if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') input.click(); });
-  zone.addEventListener('dragover', function(e){ e.preventDefault(); zone.classList.add('dragover'); });
-  zone.addEventListener('dragleave', function(){ zone.classList.remove('dragover'); });
-  zone.addEventListener('drop', function(e){
-    e.preventDefault(); zone.classList.remove('dragover');
-    if (e.dataTransfer.files.length) handler(multi ? e.dataTransfer.files : e.dataTransfer.files[0]);
-  });
-  input.addEventListener('change', function(e){
-    if (e.target.files.length) handler(multi ? e.target.files : e.target.files[0]);
-    input.value = '';
-  });
-}
-wireDrop($('dropCxf'), $('fileCxf'), handleCxfFiles, true);
-wireDrop($('dropIcc'), $('fileIcc'), handleIccFile, false);
-
-function wireSeg(id, cb){
-  var seg = $(id);
-  seg.querySelectorAll('button').forEach(function(b){
-    b.addEventListener('click', function(){
-      seg.querySelectorAll('button').forEach(function(x){ x.classList.remove('on'); });
-      b.classList.add('on');
-      cb(b.getAttribute('data-v'));
-    });
-  });
-}
-wireSeg('segIll', function(v){ state.ill = v; recomputeAll(); });
-wireSeg('segIntent', function(v){ state.intent = v; rebuildTransform(); state.samples.forEach(computeCmyk); render(); });
-wireSeg('segBpc', function(v){ state.bpc = (v === 'on'); rebuildTransform(); state.samples.forEach(computeCmyk); render(); });
-
-$('btnCsv').addEventListener('click', downloadCsv);
-$('btnClear').addEventListener('click', function(){
-  state.samples = [];
-  $('cxfStatus').innerHTML = '<button class="btn-link" id="loadSample">サンプルCxFで試す</button>';
-  wireSampleBtn();
-  render();
-});
-
-function wireSampleBtn(){
-  var b = $('loadSample');
-  if (!b) return;
-  b.addEventListener('click', function(e){
-    e.stopPropagation();
-    fetch('samples/sample.cxf').then(function(r){ return r.text(); }).then(function(text){
-      var parsed = P.parseCxF(text);
-      parsed.objects.forEach(function(obj){
-        state.samples.push({ file: 'sample.cxf', obj: obj, convD50: null, convView: null, cmyk: null, cmykSource: '' });
-      });
-      recomputeAll();
-      toast('サンプル ' + parsed.objects.length + '色を読み込みました');
-    }).catch(function(){ toast('サンプルの読み込みに失敗しました'); });
-  });
-}
-wireSampleBtn();
-})();
-</script>
+<script src="js/terms.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
