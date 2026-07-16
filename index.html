@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CxF変換ツール — 測色データをLab・RGB・CMYKへ無料変換 | CxF Color Converter</title>
 <meta name="description" content="X-Rite i1Proなどの測色計が書き出すCxF3ファイルをドロップするだけで、Lab・XYZ・sRGB・CMYK値と色見本を即表示する無料Webツール。Japan Color等のICCプロファイル対応。登録不要、測定データはブラウザ内で処理され送信されません。">
-<meta name="theme-color" content="#131418">
+<meta name="theme-color" content="#F2F2F7">
 <link rel="canonical" href="https://daisukehori.github.io/cxf-color-converter/">
 <link rel="icon" href="favicon.ico" sizes="32x32">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -39,81 +39,74 @@
   "author": { "@type": "Person", "name": "Daisuke Hori", "url": "https://github.com/DaisukeHori" }
 }
 </script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <header class="site">
-  <div class="wrap">
-    <nav class="nav">
-      <a class="brand" href="./"><span class="dot"></span>CxF Color Converter</a>
-      <div class="links">
-        <a href="./" class="on">変換ツール</a>
-        <a href="guide.html">使い方・FAQ</a>
-        <a href="https://github.com/DaisukeHori/cxf-color-converter" target="_blank" rel="noopener">GitHub</a>
-      </div>
-    </nav>
-    <div class="hero">
-      <div class="eyebrow">CxF3 / ISO 17972 → LAB · XYZ · SRGB · CMYK</div>
-      <h1>測った色を、そのまま使える数値に。</h1>
-      <p class="lede">分光測色計が書き出した CxF<button class="q" type="button" data-term="cxf" aria-label="CxFファイルとは" aria-expanded="false">?</button> ファイルをドロップするだけで、色見本と Lab・sRGB・CMYK 値がその場に並びます。計算はすべてブラウザの中で完結し、ファイルはどこにも送信されません。</p>
-      <div class="spectrum-band" id="specBand"></div>
-      <div class="band-label">380nm ─ 可視スペクトル ─ 730nm</div>
+  <nav class="nav">
+    <a class="brand" href="./"><span class="dot"></span>CxF Color Converter</a>
+    <div class="links">
+      <a href="./" class="on">変換ツール</a>
+      <a href="guide.html">使い方・FAQ</a>
+      <a href="https://github.com/DaisukeHori/cxf-color-converter" target="_blank" rel="noopener">GitHub</a>
     </div>
-  </div>
+  </nav>
 </header>
 
+<section class="hero">
+  <div class="eyebrow">CXF3 / ISO 17972 → LAB · XYZ · SRGB · CMYK</div>
+  <h1>測った色を、そのまま使える数値に。</h1>
+  <p class="lede">分光測色計が書き出した CxF<button class="q" type="button" data-term="cxf" aria-label="CxFファイルとは" aria-expanded="false">?</button> ファイルをドロップするだけで、色見本と Lab・sRGB・CMYK 値がその場に並びます。計算はすべてブラウザの中で完結し、ファイルはどこにも送信されません。</p>
+  <div class="spectrum-band" id="specBand"></div>
+  <div class="band-label"><span>380nm</span><span>可視スペクトル</span><span>730nm</span></div>
+</section>
+
 <main>
-  <div class="wrap">
-    <section class="drops">
-      <div class="drop" id="dropCxf">
-        <h2>CxF3 ファイルをドロップ</h2>
-        <p>複数ファイル可 · クリックで選択</p>
-        <div class="hint">.cxf .mxf .xml — X-Rite i1Profiler / eXact / Ci シリーズ等の出力</div>
-        <div class="status" id="cxfStatus"><button class="btn-link" id="loadSample" type="button">サンプルCxFで試す</button></div>
-        <input type="file" id="fileCxf" multiple accept=".cxf,.mxf,.cmxf,.xml,.txt">
-      </div>
-      <div class="drop" id="dropIcc">
-        <h2>CMYK ICC プロファイル<span class="opt">（任意）</span><button class="q" type="button" data-term="icc" aria-label="ICCプロファイルとは" aria-expanded="false">?</button></h2>
-        <p>Japan Color 2001/2011 Coated 等</p>
-        <div class="hint">.icc .icm — 一度読み込むとこの端末に保存され、次回から自動適用（送信されません）</div>
-        <div class="status" id="iccStatus"><span class="badge naive">簡易CMYK<button class="q" type="button" data-term="cmyk" aria-label="CMYKとは" aria-expanded="false" style="margin-left:6px;border-color:currentColor;color:inherit">?</button></span></div>
-        <input type="file" id="fileIcc" accept=".icc,.icm">
-      </div>
-    </section>
+  <section class="drops">
+    <div class="drop" id="dropCxf">
+      <div class="icon blue"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 13.5 V3.5 M6 7 L10 3 L14 7 M4 13 v3 a1.5 1.5 0 0 0 1.5 1.5 h9 a1.5 1.5 0 0 0 1.5-1.5 v-3" stroke="#007AFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+      <h2>CxF3 ファイルをドロップ</h2>
+      <p>複数ファイル可 · クリックで選択</p>
+      <div class="hint">.cxf .mxf .xml — X-Rite i1Profiler / eXact / Ci シリーズ等の出力</div>
+      <div class="status" id="cxfStatus"><button class="btn-link js-load-sample" type="button">サンプルCxFで試す</button></div>
+      <input type="file" id="fileCxf" multiple accept=".cxf,.mxf,.cmxf,.xml,.txt">
+    </div>
+    <div class="drop" id="dropIcc">
+      <div class="icon gray"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="6.5" stroke="rgba(0,0,0,0.45)" stroke-width="1.6"></circle><path d="M10 3.5 v13 M3.5 10 h13" stroke="rgba(0,0,0,0.45)" stroke-width="1.6" stroke-linecap="round"></path></svg></div>
+      <h2>CMYK ICC プロファイル<span class="opt">（任意）</span><button class="q" type="button" data-term="icc" aria-label="ICCプロファイルとは" aria-expanded="false">?</button></h2>
+      <p>Japan Color 2001/2011 Coated 等</p>
+      <div class="hint">.icc .icm — 一度読み込むとこの端末に保存され、次回から自動適用（送信されません）</div>
+      <div class="status" id="iccStatus"><span class="badge naive">簡易CMYK<button class="q" type="button" data-term="cmyk" aria-label="CMYKとは" aria-expanded="false" style="margin-left:6px;border-color:currentColor;color:inherit">?</button></span></div>
+      <input type="file" id="fileIcc" accept=".icc,.icm">
+    </div>
+  </section>
 
-    <section class="controls">
-      <div class="ctrl">
-        <label>表示光源<button class="q" type="button" data-term="illuminant" aria-label="表示光源とは" aria-expanded="false">?</button></label>
-        <span class="seg" id="segIll">
-          <button type="button" data-v="D50" class="on">D50/2°</button>
-          <button type="button" data-v="D65">D65/2°</button>
-        </span>
+  <section class="controls">
+    <div class="ctrl">
+      <label>表示光源<button class="q" type="button" data-term="illuminant" aria-label="表示光源とは" aria-expanded="false">?</button></label>
+      <div class="seg" id="segIll">
+        <button type="button" data-v="D50" class="on">D50/2°</button>
+        <button type="button" data-v="D65">D65/2°</button>
       </div>
-      <div class="ctrl">
-        <label>インテント<button class="q" type="button" data-term="intent" aria-label="レンダリングインテントとは" aria-expanded="false">?</button></label>
-        <span class="seg" id="segIntent">
-          <button type="button" data-v="relative" class="on">相対比色</button>
-          <button type="button" data-v="perceptual">知覚的</button>
-        </span>
+    </div>
+    <div class="ctrl">
+      <label>インテント<button class="q" type="button" data-term="intent" aria-label="レンダリングインテントとは" aria-expanded="false">?</button></label>
+      <div class="seg" id="segIntent">
+        <button type="button" data-v="relative" class="on">相対比色</button>
+        <button type="button" data-v="perceptual">知覚的</button>
       </div>
-      <div class="ctrl">
-        <label>BPC<button class="q" type="button" data-term="bpc" aria-label="BPC（黒点補正）とは" aria-expanded="false">?</button></label>
-        <span class="seg" id="segBpc">
-          <button type="button" data-v="on" class="on">ON</button>
-          <button type="button" data-v="off">OFF</button>
-        </span>
-      </div>
-      <span class="spacer"></span>
-      <button class="btn ghost" id="btnClear" type="button" disabled>クリア</button>
-      <button class="btn primary" id="btnCsv" type="button" disabled>CSVダウンロード</button>
-    </section>
+    </div>
+    <div class="ctrl">
+      <label>BPC<button class="q" type="button" data-term="bpc" aria-label="BPC（黒点補正）とは" aria-expanded="false">?</button></label>
+      <button class="switch" id="bpcSwitch" type="button" role="switch" aria-checked="true" aria-label="BPC（黒点補正）"><span class="knob"></span></button>
+    </div>
+    <span class="spacer"></span>
+    <button class="btn ghost" id="btnClear" type="button" disabled>クリア</button>
+    <button class="btn primary" id="btnCsv" type="button" disabled>CSVダウンロード</button>
+  </section>
 
-    <section id="results"></section>
-  </div>
+  <section id="results"></section>
 </main>
 
 <footer class="site">

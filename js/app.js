@@ -1,5 +1,5 @@
 /**
- * app.js — CxF Color Converter メインアプリ
+ * app.js — CxF Color Converter メインアプリ (Claude Design 版)
  * 依存: colorlib.js (CxFColor), cxf-parser.js (CxFParser),
  *       terms.js (CxFTerms), vendor/jsColorEngineWeb.js (jsColorEngine)
  */
@@ -9,7 +9,7 @@
 
   // ===== 状態 =====
   var state = {
-    samples: [],          // {file, obj, convD50, convView, cmyk, cmykSource}
+    samples: [],          // {file, obj, convD50, convView, cmyk, cmykSource, cmykIsIcc}
     ill: 'D50',
     intent: 'relative',
     bpc: true,
@@ -65,7 +65,7 @@
     }
     var base = s.convView || s.convD50;
     s.cmyk = base && base.rgb ? C.naiveCmyk(base.rgb) : null;
-    s.cmykSource = '簡易・参考値';
+    s.cmykSource = '簡易';
     s.cmykIsIcc = false;
   }
 
@@ -76,183 +76,6 @@
       computeCmyk(s);
     });
     render();
-  }
-
-  // ===== スペクトルSVG =====
-  var GRAD_DEF = (function () {
-    var stops = '';
-    for (var i = 0; i < C.N_WL; i++) {
-      stops += '<stop offset="' + ((i / (C.N_WL - 1)) * 100).toFixed(1) + '%" stop-color="' + C.wavelengthToCss(C.WL_GRID[i]) + '"/>';
-    }
-    return stops;
-  })();
-
-  function spectrumSvg(spec36, uid) {
-    if (!spec36) return '<div class="nochart">スペクトルなし — 直接値から変換</div>';
-    var W = 360, H = 64, padL = 2, padB = 12, padT = 4;
-    var iw = W - padL * 2, ih = H - padB - padT;
-    var maxR = 1.0;
-    for (var i = 0; i < spec36.length; i++) if (spec36[i] > maxR) maxR = spec36[i];
-    var pts = [];
-    for (var j = 0; j < C.N_WL; j++) {
-      var x = padL + (j / (C.N_WL - 1)) * iw;
-      var y = padT + ih - (Math.max(0, spec36[j]) / maxR) * ih;
-      pts.push(x.toFixed(1) + ',' + y.toFixed(1));
-    }
-    var line = pts.join(' ');
-    var area = padL + ',' + (padT + ih) + ' ' + line + ' ' + (padL + iw) + ',' + (padT + ih);
-    return '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="反射率スペクトル">' +
-      '<defs><linearGradient id="g' + uid + '" x1="0" y1="0" x2="1" y2="0">' + GRAD_DEF + '</linearGradient></defs>' +
-      '<polygon points="' + area + '" fill="url(#g' + uid + ')" opacity="0.7"/>' +
-      '<polyline points="' + line + '" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.3"/>' +
-      '<line x1="' + padL + '" y1="' + (padT + ih) + '" x2="' + (padL + iw) + '" y2="' + (padT + ih) + '" stroke="var(--line-2)"/>' +
-      '<text class="axis" x="' + padL + '" y="' + (H - 1) + '">380nm</text>' +
-      '<text class="axis" x="' + (padL + iw) + '" y="' + (H - 1) + '" text-anchor="end">730nm</text>' +
-      '</svg>';
-  }
-
-  // ===== 相対輝度 (プレビューの文字色判定) =====
-  function isLight(rgb) {
-    var lin = function (v) { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
-    var L = 0.2126 * lin(rgb.r) + 0.7152 * lin(rgb.g) + 0.0722 * lin(rgb.b);
-    return L > 0.36;
-  }
-
-  // ===== 全画面カラープレビュー =====
-  function openPreview(idx) {
-    var s = state.samples[idx];
-    if (!s || !s.convView) return;
-    var cv = s.convView;
-    var fg = isLight(cv.rgb) ? '#15161A' : '#F4F5F8';
-    var ov = document.createElement('div');
-    ov.className = 'preview';
-    ov.style.background = cv.hex;
-    ov.style.color = fg;
-    var cmykRow = s.cmyk ? '<div class="row">CMYK ' + s.cmyk.c + ' / ' + s.cmyk.m + ' / ' + s.cmyk.y + ' / ' + s.cmyk.k + (s.cmykIsIcc ? '' : ' <span style="opacity:.65">(簡易)</span>') + '</div>' : '';
-    ov.innerHTML =
-      '<div class="esc">クリック / ESC で戻る</div>' +
-      '<div class="info">' +
-        '<div class="nm">' + esc(s.obj.name) + '</div>' +
-        '<div class="row">' + cv.hex.toUpperCase() + '</div>' +
-        (cv.Lab ? '<div class="row">L*a*b* ' + fmt(cv.Lab[0], 2) + ' / ' + fmt(cv.Lab[1], 2) + ' / ' + fmt(cv.Lab[2], 2) + '</div>' : '') +
-        cmykRow +
-      '</div>';
-    function close() {
-      ov.remove();
-      document.removeEventListener('keydown', onKey);
-    }
-    function onKey(e) { if (e.key === 'Escape') close(); }
-    ov.addEventListener('click', close);
-    document.addEventListener('keydown', onKey);
-    document.body.appendChild(ov);
-  }
-
-  // ===== 描画 =====
-  function render() {
-    var box = $('results');
-    if (state.samples.length === 0) {
-      box.innerHTML =
-        '<div class="empty">' +
-          '<p class="lead">まだデータがありません。CxF3 ファイルをドロップしてください。</p>' +
-          '<div class="steps">' +
-            '<div class="step"><b>STEP 1</b>測色計で色を測り、ソフトからCxF3で書き出す</div>' +
-            '<div class="step"><b>STEP 2</b>ここにドロップ。すぐに全色数値へ変換</div>' +
-            '<div class="step"><b>STEP 3</b>HEXをコピー、またはCSVで一括ダウンロード</div>' +
-          '</div>' +
-        '</div>';
-      $('btnCsv').disabled = true; $('btnClear').disabled = true;
-      return;
-    }
-    $('btnCsv').disabled = false; $('btnClear').disabled = false;
-
-    var html = '<div class="grid-cards">';
-    state.samples.forEach(function (s, idx) {
-      var cv = s.convView;
-      if (!cv) return;
-      var lab = cv.Lab, xyz = cv.XYZ, rgb = cv.rgb;
-      var chipFg = isLight(rgb) ? 'rgba(15,16,20,.78)' : 'rgba(255,255,255,.9)';
-      var chipBg = isLight(rgb) ? 'rgba(255,255,255,.5)' : 'rgba(15,16,20,.45)';
-      var typeTag = '';
-      if (/^M[012]_/.test(s.obj.objectType)) {
-        typeTag = '<span class="tag">' + esc(s.obj.objectType.slice(0, 2)) + T.qBtn('m012') + '</span>';
-      } else if (s.obj.objectType) {
-        typeTag = '<span class="tag">' + esc(s.obj.objectType) + '</span>';
-      }
-      var srcTag = cv.source === 'spectrum'
-        ? '<span class="tag">スペクトル' + T.qBtn('spectrum') + '</span>'
-        : '<span class="tag">' + esc({ lab: 'Lab直接値', xyz: 'XYZ直接値', srgb: 'sRGB直接値' }[cv.source] || cv.source) + '</span>';
-
-      html += '<article class="card">' +
-        '<div class="swatch" data-idx="' + idx + '" role="button" tabindex="0" aria-label="' + esc(s.obj.name) + ' を全画面で見る" style="background:' + cv.hex + '">' +
-          (rgb.outOfGamut ? '<span class="gamut">sRGB域外' + T.qBtn('gamut') + '</span>' : '') +
-          '<span class="zoom" style="color:' + chipFg + ';background:' + chipBg + '">クリックで全画面</span>' +
-          '<span class="hexchip" style="color:' + chipFg + ';background:' + chipBg + '">' + cv.hex.toUpperCase() + '</span>' +
-        '</div>' +
-        '<div class="body">' +
-          '<div class="head">' +
-            '<span class="name">' + esc(s.obj.name) + '</span>' + typeTag + srcTag +
-            '<span class="fname">' + esc(s.file) + '</span>' +
-          '</div>' +
-          '<div class="vals">' +
-            (lab ? '<div class="kv"><b>L*a*b* <span style="margin-left:4px;color:var(--faint)">' + state.ill + '/2°</span>' + T.qBtn('lab') + '</b><span class="num">' + fmt(lab[0], 2) + ' / ' + fmt(lab[1], 2) + ' / ' + fmt(lab[2], 2) + '</span></div>' : '') +
-            (xyz ? '<div class="kv"><b>XYZ' + T.qBtn('xyz') + '</b><span class="num">' + fmt(xyz[0], 2) + ' / ' + fmt(xyz[1], 2) + ' / ' + fmt(xyz[2], 2) + '</span></div>' : '') +
-            '<div class="kv"><b>sRGB' + T.qBtn('srgb') + '</b><span class="num">' + rgb.r + ' ' + rgb.g + ' ' + rgb.b + '　<button class="copybtn" data-copy="' + cv.hex.toUpperCase() + '" title="HEXをコピー">' + cv.hex.toUpperCase() + ' ⧉</button></span></div>' +
-            (s.cmyk ? '<div class="kv"><b>CMYK' + T.qBtn('cmyk') + '</b><span class="num">' + s.cmyk.c + ' / ' + s.cmyk.m + ' / ' + s.cmyk.y + ' / ' + s.cmyk.k + '</span><span class="src">' + esc(s.cmykSource) + '</span></div>' : '') +
-          '</div>' +
-        '</div>' +
-        '<div class="chartwrap">' + spectrumSvg(cv.spectrum36, idx) + '</div>' +
-      '</article>';
-    });
-    html += '</div>';
-    box.innerHTML = html;
-
-    box.querySelectorAll('.copybtn').forEach(function (b) {
-      b.addEventListener('click', function (e) {
-        e.stopPropagation();
-        navigator.clipboard.writeText(b.getAttribute('data-copy')).then(function () {
-          toast(b.getAttribute('data-copy') + ' をコピーしました');
-        });
-      });
-    });
-    box.querySelectorAll('.swatch').forEach(function (sw) {
-      sw.addEventListener('click', function (e) {
-        if (e.target.closest('.q')) return;
-        openPreview(Number(sw.getAttribute('data-idx')));
-      });
-      sw.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPreview(Number(sw.getAttribute('data-idx'))); }
-      });
-    });
-  }
-
-  // ===== CxFファイル処理 =====
-  function handleCxfFiles(files) {
-    var added = 0, errs = [];
-    var arr = Array.prototype.slice.call(files);
-    var done = 0;
-    arr.forEach(function (file) {
-      file.text().then(function (text) {
-        try {
-          var parsed = P.parseCxF(text);
-          parsed.objects.forEach(function (obj) {
-            state.samples.push({ file: file.name, obj: obj, convD50: null, convView: null, cmyk: null, cmykSource: '' });
-            added++;
-          });
-          if (parsed.warnings.length) parsed.warnings.forEach(function (w) { errs.push(file.name + ': ' + w); });
-          var devInfo = parsed.device.name ? parsed.device.name + (parsed.device.serial ? ' #' + parsed.device.serial : '') : '';
-          $('cxfStatus').innerHTML = '<span class="ok">' + esc(file.name) + ' — ' + parsed.objects.length + '色 読込</span>' +
-            (devInfo ? ' <span style="font-family:var(--mono);font-size:.66rem;color:var(--faint)">' + esc(devInfo) + '</span>' : '');
-        } catch (e) {
-          errs.push(file.name + ': ' + e.message);
-        }
-        done++;
-        if (done === arr.length) {
-          if (added > 0) recomputeAll();
-          if (errs.length) toast(errs[0]);
-          else if (added > 0) toast(added + '色を変換しました');
-        }
-      });
-    });
   }
 
   // ===== ICCの端末内保存 (IndexedDB) =====
@@ -357,6 +180,175 @@
     }).catch(function () {});
   }
 
+  // ===== スペクトルSVG (その色自身の線で描く) =====
+  function spectrumSvg(spec36, hex) {
+    if (!spec36) return '<div class="nochart">スペクトルなし — 直接値から変換</div>';
+    var W = 300, H = 56, base = 52, padT = 4;
+    var ih = base - padT;
+    var maxR = 1.0;
+    for (var i = 0; i < spec36.length; i++) if (spec36[i] > maxR) maxR = spec36[i];
+    var pts = [];
+    for (var j = 0; j < C.N_WL; j++) {
+      var x = (j / (C.N_WL - 1)) * W;
+      var y = padT + ih - (Math.max(0, spec36[j]) / maxR) * ih;
+      pts.push(x.toFixed(1) + ',' + y.toFixed(1));
+    }
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="反射率スペクトル 380から730ナノメートル">' +
+      '<line x1="0" y1="' + base + '" x2="' + W + '" y2="' + base + '" stroke="rgba(0,0,0,0.10)" stroke-width="1"></line>' +
+      '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + hex + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></polyline>' +
+      '</svg>';
+  }
+
+  // ===== 相対輝度 (プレビューの文字色判定) =====
+  function isLight(rgb) {
+    var lin = function (v) { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+    var L = 0.2126 * lin(rgb.r) + 0.7152 * lin(rgb.g) + 0.0722 * lin(rgb.b);
+    return L > 0.36;
+  }
+
+  // ===== 全画面カラープレビュー =====
+  function openPreview(idx) {
+    var s = state.samples[idx];
+    if (!s || !s.convView) return;
+    var cv = s.convView;
+    var light = isLight(cv.rgb);
+    var fg = light ? '#000' : '#FFF';
+    var chip = light ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.16)';
+    var ov = document.createElement('div');
+    ov.className = 'preview';
+    ov.style.background = cv.hex;
+    ov.style.color = fg;
+    var cmykRow = s.cmyk ? '<div class="row">CMYK ' + s.cmyk.c + ' / ' + s.cmyk.m + ' / ' + s.cmyk.y + ' / ' + s.cmyk.k + (s.cmykIsIcc ? '' : ' <span style="opacity:.6">(簡易)</span>') + '</div>' : '';
+    ov.innerHTML =
+      '<div class="esc" style="background:' + chip + '">クリック / ESC で戻る</div>' +
+      '<div class="info">' +
+        '<div class="nm">' + esc(s.obj.name) + '</div>' +
+        '<div class="row">' + cv.hex.toUpperCase() + '</div>' +
+        (cv.Lab ? '<div class="row">L*a*b* ' + fmt(cv.Lab[0], 2) + ' / ' + fmt(cv.Lab[1], 2) + ' / ' + fmt(cv.Lab[2], 2) + '</div>' : '') +
+        cmykRow +
+      '</div>';
+    function close() {
+      ov.remove();
+      document.removeEventListener('keydown', onKey);
+    }
+    function onKey(e) { if (e.key === 'Escape') close(); }
+    ov.addEventListener('click', close);
+    document.addEventListener('keydown', onKey);
+    document.body.appendChild(ov);
+  }
+
+  // ===== 描画 =====
+  function metaLabel(s, cv) {
+    var type = '';
+    if (/^M[012]_/.test(s.obj.objectType)) type = s.obj.objectType.slice(0, 2);
+    else if (s.obj.objectType) type = s.obj.objectType;
+    var src = { spectrum: 'スペクトル', lab: 'Lab直接値', xyz: 'XYZ直接値', srgb: 'sRGB直接値' }[cv.source] || cv.source;
+    var qkey = /^M[012]$/.test(type) ? 'm012' : (cv.source === 'spectrum' ? 'spectrum' : null);
+    var text = type ? type + ' · ' + src : src;
+    return '<span class="meta">' + esc(text) + (qkey ? T.qBtn(qkey) : '') + '</span>';
+  }
+
+  function render() {
+    var box = $('results');
+    if (state.samples.length === 0) {
+      box.innerHTML =
+        '<div class="empty">' +
+          '<p class="lead">ここに変換結果が並びます</p>' +
+          '<div class="steps">' +
+            '<div class="step"><b>STEP 1</b>測色計で測り CxF3 で書き出す</div>' +
+            '<div class="step"><b>STEP 2</b>上の欄にファイルをドロップ</div>' +
+            '<div class="step"><b>STEP 3</b>HEXコピー・CSVで書き出し</div>' +
+          '</div>' +
+          '<button class="btn primary js-load-sample" type="button">サンプルCxFで試す</button>' +
+        '</div>';
+      $('btnCsv').disabled = true; $('btnClear').disabled = true;
+      return;
+    }
+    $('btnCsv').disabled = false; $('btnClear').disabled = false;
+
+    var html = '<div class="grid-cards">';
+    state.samples.forEach(function (s, idx) {
+      var cv = s.convView;
+      if (!cv) return;
+      var lab = cv.Lab, xyz = cv.XYZ, rgb = cv.rgb;
+      var cmykSrc = s.cmykIsIcc
+        ? '<span class="srcname" title="' + esc(s.cmykSource) + '">ICC</span>'
+        : '<span class="srcname naivemark">簡易</span>';
+
+      html += '<article class="card">' +
+        '<div class="swatch" data-idx="' + idx + '" role="button" tabindex="0" aria-label="' + esc(s.obj.name) + ' を全画面で見る" style="background:' + cv.hex + '">' +
+          (rgb.outOfGamut ? '<span class="gamut">sRGB域外' + T.qBtn('gamut') + '</span>' : '') +
+          '<span class="zoom">クリックで全画面</span>' +
+          '<span class="hexchip">' + cv.hex.toUpperCase() + '</span>' +
+        '</div>' +
+        '<div class="body">' +
+          '<div class="head">' +
+            '<span class="name">' + esc(s.obj.name) + '</span>' +
+            metaLabel(s, cv) +
+            '<span class="fname">' + esc(s.file) + '</span>' +
+          '</div>' +
+          '<div class="vals">' +
+            (lab ? '<div class="kv"><b>L*a*b* (' + state.ill + '/2°)' + T.qBtn('lab') + '</b><span class="num">' + fmt(lab[0], 2) + ' / ' + fmt(lab[1], 2) + ' / ' + fmt(lab[2], 2) + '</span></div>' : '') +
+            (xyz ? '<div class="kv"><b>XYZ' + T.qBtn('xyz') + '</b><span class="num">' + fmt(xyz[0], 2) + ' / ' + fmt(xyz[1], 2) + ' / ' + fmt(xyz[2], 2) + '</span></div>' : '') +
+            '<div class="kv"><b>sRGB / HEX' + T.qBtn('srgb') + '</b><button class="copybtn" data-copy="' + cv.hex.toUpperCase() + '" title="クリックでコピー">' + cv.hex.toUpperCase() + ' ⧉</button></div>' +
+            (s.cmyk ? '<div class="kv"><b>CMYK ' + cmykSrc + T.qBtn('cmyk') + '</b><span class="num">' + s.cmyk.c + ' / ' + s.cmyk.m + ' / ' + s.cmyk.y + ' / ' + s.cmyk.k + '</span></div>' : '') +
+          '</div>' +
+          '<div class="chartwrap">' + spectrumSvg(cv.spectrum36, cv.hex) + '</div>' +
+        '</div>' +
+      '</article>';
+    });
+    html += '</div>';
+    box.innerHTML = html;
+
+    box.querySelectorAll('.copybtn').forEach(function (b) {
+      b.addEventListener('click', function (e) {
+        e.stopPropagation();
+        navigator.clipboard.writeText(b.getAttribute('data-copy')).then(function () {
+          toast(b.getAttribute('data-copy') + ' をコピーしました');
+        });
+      });
+    });
+    box.querySelectorAll('.swatch').forEach(function (sw) {
+      sw.addEventListener('click', function (e) {
+        if (e.target.closest('.q')) return;
+        openPreview(Number(sw.getAttribute('data-idx')));
+      });
+      sw.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPreview(Number(sw.getAttribute('data-idx'))); }
+      });
+    });
+  }
+
+  // ===== CxFファイル処理 =====
+  function handleCxfFiles(files) {
+    var added = 0, errs = [];
+    var arr = Array.prototype.slice.call(files);
+    var done = 0;
+    arr.forEach(function (file) {
+      file.text().then(function (text) {
+        try {
+          var parsed = P.parseCxF(text);
+          parsed.objects.forEach(function (obj) {
+            state.samples.push({ file: file.name, obj: obj, convD50: null, convView: null, cmyk: null, cmykSource: '', cmykIsIcc: false });
+            added++;
+          });
+          if (parsed.warnings.length) parsed.warnings.forEach(function (w) { errs.push(file.name + ': ' + w); });
+          var devInfo = parsed.device.name ? parsed.device.name + (parsed.device.serial ? ' #' + parsed.device.serial : '') : '';
+          $('cxfStatus').innerHTML = '<span class="ok">● ' + esc(file.name) + ' — ' + parsed.objects.length + '色を読み込みました</span>' +
+            (devInfo ? ' <span style="font-family:var(--mono);font-size:11px;color:var(--ter)">' + esc(devInfo) + '</span>' : '');
+        } catch (e) {
+          errs.push(file.name + ': ' + e.message);
+        }
+        done++;
+        if (done === arr.length) {
+          if (added > 0) recomputeAll();
+          if (errs.length) toast(errs[0]);
+          else if (added > 0) toast(added + '色を変換しました');
+        }
+      });
+    });
+  }
+
   // ===== CSVエクスポート =====
   function downloadCsv() {
     var head = ['file', 'name', 'object_type', 'source', 'illuminant', 'L', 'a', 'b', 'X', 'Y', 'Z', 'R', 'G', 'B', 'HEX', 'C', 'M', 'Y_', 'K', 'cmyk_source'];
@@ -415,32 +407,39 @@
   }
   wireSeg('segIll', function (v) { state.ill = v; recomputeAll(); });
   wireSeg('segIntent', function (v) { state.intent = v; rebuildTransform(); state.samples.forEach(computeCmyk); render(); });
-  wireSeg('segBpc', function (v) { state.bpc = (v === 'on'); rebuildTransform(); state.samples.forEach(computeCmyk); render(); });
+
+  // BPC: iOS風トグルスイッチ
+  $('bpcSwitch').addEventListener('click', function () {
+    state.bpc = !state.bpc;
+    this.setAttribute('aria-checked', String(state.bpc));
+    rebuildTransform();
+    state.samples.forEach(computeCmyk);
+    render();
+  });
 
   $('btnCsv').addEventListener('click', downloadCsv);
   $('btnClear').addEventListener('click', function () {
     state.samples = [];
-    $('cxfStatus').innerHTML = '<button class="btn-link" id="loadSample" type="button">サンプルCxFで試す</button>';
-    wireSampleBtn();
+    $('cxfStatus').innerHTML = '<button class="btn-link js-load-sample" type="button">サンプルCxFで試す</button>';
     render();
   });
 
-  function wireSampleBtn() {
-    var b = $('loadSample');
+  // サンプル読込 (ドロップ欄・空状態のどちらのボタンでも動くよう委譲)
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('.js-load-sample') : null;
     if (!b) return;
-    b.addEventListener('click', function (e) {
-      e.stopPropagation();
-      fetch('samples/sample.cxf').then(function (r) { return r.text(); }).then(function (text) {
-        var parsed = P.parseCxF(text);
-        parsed.objects.forEach(function (obj) {
-          state.samples.push({ file: 'sample.cxf', obj: obj, convD50: null, convView: null, cmyk: null, cmykSource: '' });
-        });
-        recomputeAll();
-        toast('サンプル ' + parsed.objects.length + '色を読み込みました');
-      }).catch(function () { toast('サンプルの読み込みに失敗しました'); });
-    });
-  }
-  wireSampleBtn();
+    e.stopPropagation();
+    fetch('samples/sample.cxf').then(function (r) { return r.text(); }).then(function (text) {
+      var parsed = P.parseCxF(text);
+      parsed.objects.forEach(function (obj) {
+        state.samples.push({ file: 'sample.cxf', obj: obj, convD50: null, convView: null, cmyk: null, cmykSource: '', cmykIsIcc: false });
+      });
+      $('cxfStatus').innerHTML = '<span class="ok">● sample.cxf — ' + parsed.objects.length + '色を読み込みました</span>';
+      recomputeAll();
+      toast('サンプル ' + parsed.objects.length + '色を読み込みました');
+    }).catch(function () { toast('サンプルの読み込みに失敗しました'); });
+  });
+
   restoreIcc();
   render();
 })();
