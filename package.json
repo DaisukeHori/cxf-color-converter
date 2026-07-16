@@ -1,0 +1,17 @@
+{
+  "name": "cxf-color-converter",
+  "version": "1.0.0",
+  "description": "CxF3 (ISO 17972) spectral data to Lab / XYZ / sRGB / CMYK converter — runs entirely in the browser",
+  "scripts": {
+    "test": "node test/run-tests.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DaisukeHori/cxf-color-converter.git"
+  },
+  "author": "Daisuke Hori",
+  "license": "MIT",
+  "devDependencies": {
+    "@xmldom/xmldom": "^0.9.0"
+  }
+}

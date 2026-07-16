@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cc:CxF xmlns:cc="http://colorexchangeformat.com/CxF3-core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<cc:FileInformation>
+		<cc:Creator>CxF Color Converter — sample data</cc:Creator>
+		<cc:CreationDate>2026-07-16T00:00:00Z</cc:CreationDate>
+		<cc:Description>Synthetic demo spectra (not real measurements). 380-730nm / 10nm / 36 points.</cc:Description>
+	</cc:FileInformation>
+	<cc:Resources>
+		<cc:ObjectCollection>
+			<cc:Object ObjectType="M0_Measurement" Name="Warm White (M0)" Id="c1">
+				<cc:CreationDate>2026-07-16T00:00:00Z</cc:CreationDate>
+				<cc:ColorValues>
+					<cc:ReflectanceSpectrum StartWL="380" ColorSpecification="M0_Measurement_spec">0.15 0.28 0.45 0.60 0.70 0.75 0.78 0.80 0.81 0.82 0.83 0.83 0.84 0.84 0.84 0.85 0.85 0.85 0.85 0.85 0.86 0.86 0.86 0.86 0.86 0.87 0.87 0.87 0.87 0.87 0.87 0.87 0.88 0.88 0.88 0.88</cc:ReflectanceSpectrum>
+				</cc:ColorValues>
+			</cc:Object>
+			<cc:Object ObjectType="M1_Measurement" Name="Warm White (M1)" Id="c2">
+				<cc:CreationDate>2026-07-16T00:00:00Z</cc:CreationDate>
+				<cc:ColorValues>
+					<cc:ReflectanceSpectrum StartWL="380" ColorSpecification="M1_Measurement_spec">0.18 0.32 0.49 0.63 0.72 0.76 0.79 0.80 0.81 0.82 0.83 0.83 0.84 0.84 0.84 0.85 0.85 0.85 0.85 0.85 0.86 0.86 0.86 0.86 0.86 0.87 0.87 0.87 0.87 0.87 0.87 0.87 0.88 0.88 0.88 0.88</cc:ReflectanceSpectrum>
+				</cc:ColorValues>
+			</cc:Object>
+			<cc:Object ObjectType="M2_Measurement" Name="Warm White (M2)" Id="c3">
+				<cc:CreationDate>2026-07-16T00:00:00Z</cc:CreationDate>
+				<cc:ColorValues>
+					<cc:ReflectanceSpectrum StartWL="380" ColorSpecification="M2_Measurement_spec">0.13 0.26 0.43 0.58 0.69 0.74 0.77 0.79 0.81 0.82 0.83 0.83 0.84 0.84 0.84 0.85 0.85 0.85 0.85 0.85 0.86 0.86 0.86 0.86 0.86 0.87 0.87 0.87 0.87 0.87 0.87 0.87 0.88 0.88 0.88 0.88</cc:ReflectanceSpectrum>
+				</cc:ColorValues>
+			</cc:Object>
+			<cc:Object ObjectType="Standard" Name="Vivid Red" Id="c4">
+				<cc:CreationDate>2026-07-16T00:00:00Z</cc:CreationDate>
+				<cc:ColorValues>
+					<cc:ReflectanceSpectrum StartWL="380" ColorSpecification="M0_Measurement_spec">0.05 0.05 0.05 0.05 0.05 0.05 0.05 0.05 0.05 0.05 0.05 0.05 0.05 0.05 0.06 0.06 0.07 0.08 0.10 0.15 0.28 0.48 0.65 0.75 0.80 0.82 0.83 0.84 0.84 0.85 0.85 0.85 0.85 0.86 0.86 0.86</cc:ReflectanceSpectrum>
+				</cc:ColorValues>
+			</cc:Object>
+			<cc:Object ObjectType="Standard" Name="Emerald Green" Id="c5">
+				<cc:CreationDate>2026-07-16T00:00:00Z</cc:CreationDate>
+				<cc:ColorValues>
+					<cc:ReflectanceSpectrum StartWL="380" ColorSpecification="M0_Measurement_spec">0.06 0.07 0.08 0.09 0.10 0.12 0.15 0.20 0.28 0.36 0.43 0.47 0.48 0.46 0.42 0.36 0.30 0.24 0.19 0.15 0.12 0.10 0.09 0.08 0.08 0.07 0.07 0.07 0.07 0.08 0.08 0.09 0.10 0.11 0.12 0.13</cc:ReflectanceSpectrum>
+				</cc:ColorValues>
+			</cc:Object>
+			<cc:Object ObjectType="Standard" Name="Deep Blue" Id="c6">
+				<cc:CreationDate>2026-07-16T00:00:00Z</cc:CreationDate>
+				<cc:ColorValues>
+					<cc:ReflectanceSpectrum StartWL="380" ColorSpecification="M0_Measurement_spec">0.25 0.30 0.36 0.40 0.43 0.44 0.43 0.41 0.37 0.31 0.25 0.19 0.14 0.10 0.08 0.06 0.05 0.05 0.04 0.04 0.04 0.04 0.04 0.04 0.04 0.05 0.05 0.05 0.06 0.06 0.07 0.07 0.08 0.08 0.09 0.09</cc:ReflectanceSpectrum>
+				</cc:ColorValues>
+			</cc:Object>
+			<cc:Object ObjectType="Standard" Name="Sunset Orange (Lab)" Id="c7">
+				<cc:CreationDate>2026-07-16T00:00:00Z</cc:CreationDate>
+				<cc:ColorValues>
+					<cc:ColorCIELab ColorSpecification="CSD50_2">
+						<cc:L>68.0</cc:L>
+						<cc:A>43.0</cc:A>
+						<cc:B>68.0</cc:B>
+					</cc:ColorCIELab>
+				</cc:ColorValues>
+			</cc:Object>
+		</cc:ObjectCollection>
+		<cc:ColorSpecificationCollection>
+			<cc:ColorSpecification Id="M0_Measurement_spec">
+				<cc:MeasurementSpec>
+					<cc:MeasurementType>Spectrum_Reflectance</cc:MeasurementType>
+					<cc:GeometryChoice>
+						<cc:SingleAngle>
+							<cc:IlluminationAngle>45</cc:IlluminationAngle>
+							<cc:MeasurementAngle>0</cc:MeasurementAngle>
+						</cc:SingleAngle>
+					</cc:GeometryChoice>
+					<cc:WavelengthRange StartWL="380" Increment="10"/>
+					<cc:Device>
+						<cc:DeviceFilter>Filter_None</cc:DeviceFilter>
+						<cc:DeviceIllumination>M0_IlluminantA</cc:DeviceIllumination>
+					</cc:Device>
+				</cc:MeasurementSpec>
+			</cc:ColorSpecification>
+			<cc:ColorSpecification Id="M1_Measurement_spec">
+				<cc:MeasurementSpec>
+					<cc:MeasurementType>Spectrum_Reflectance</cc:MeasurementType>
+					<cc:GeometryChoice>
+						<cc:SingleAngle>
+							<cc:IlluminationAngle>45</cc:IlluminationAngle>
+							<cc:MeasurementAngle>0</cc:MeasurementAngle>
+						</cc:SingleAngle>
+					</cc:GeometryChoice>
+					<cc:WavelengthRange StartWL="380" Increment="10"/>
+					<cc:Device>
+						<cc:DeviceFilter>Filter_None</cc:DeviceFilter>
+						<cc:DeviceIllumination>M1_Daylight</cc:DeviceIllumination>
+					</cc:Device>
+				</cc:MeasurementSpec>
+			</cc:ColorSpecification>
+			<cc:ColorSpecification Id="M2_Measurement_spec">
+				<cc:MeasurementSpec>
+					<cc:MeasurementType>Spectrum_Reflectance</cc:MeasurementType>
+					<cc:GeometryChoice>
+						<cc:SingleAngle>
+							<cc:IlluminationAngle>45</cc:IlluminationAngle>
+							<cc:MeasurementAngle>0</cc:MeasurementAngle>
+						</cc:SingleAngle>
+					</cc:GeometryChoice>
+					<cc:WavelengthRange StartWL="380" Increment="10"/>
+					<cc:Device>
+						<cc:DeviceFilter>Filter_UVExcluded</cc:DeviceFilter>
+						<cc:DeviceIllumination>M2_UVExcluded</cc:DeviceIllumination>
+					</cc:Device>
+				</cc:MeasurementSpec>
+			</cc:ColorSpecification>
+			<cc:ColorSpecification Id="CSD50_2">
+				<cc:TristimulusSpec>
+					<cc:Illuminant>D50</cc:Illuminant>
+					<cc:Observer>2_Degree</cc:Observer>
+					<cc:Method>E308_Table5</cc:Method>
+				</cc:TristimulusSpec>
+			</cc:ColorSpecification>
+		</cc:ColorSpecificationCollection>
+	</cc:Resources>
+</cc:CxF>
